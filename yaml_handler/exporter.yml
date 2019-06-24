@@ -1,0 +1,20 @@
+php_fpm:
+  param: "--endpoint=http://127.0.0.1:9000/status --addr=127.0.0.1:"
+
+node:
+  param: "--web.listen-address=:"
+
+mysqld:
+  param: "--config.my-cnf /etc/.my.cnf --web.listen-address=:"
+  
+mongodb:
+  param: "-web.listen-address=:"
+
+nginx:
+  param: "-nginx.scrape-uri=http://127.0.0.1/basic_status -web.listen-address=:"
+
+redis:
+  param: "-web.listen-address=:"
+
+merger:
+  param: "-c /etc/merger.yaml --listen-port "

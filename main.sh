@@ -9,7 +9,14 @@ sudo cp $CUR_DIR/bin/* /usr/local/bin
 
 # Create user with no create home and set owner to run exporter
 sudo useradd --no-create-home --shell /bin/false prometheus
-sudo chown prometheus:prometheus /usr/local/bin/*_exporter
+sudo chown -R prometheus:prometheus /usr/local/bin/*_exporter
+sudo chmod +x /usr/local/bin/*_exporter
+
+# Create folder log and run for user:prometheus
+sudo mkdir -p /var/log/prometheus/
+sudo mkdir -p /var/run/prometheus/
+sudo chown -R prometheus:prometheus /var/log/prometheus
+sudo chown -R prometheus:prometheus /var/run/prometheus
 
 # Before we start running exporter. We should check existing port in server
 newport=0
@@ -30,13 +37,13 @@ function get_version_centos() {
 # FUNCTION FOR CENTOS 6
 function centos_six() {
 # Create a merger.yml file
-cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+sudo bash -c "cat << 'EOF' > /etc/merger.yaml
 exporters:
-ADDTEXT
+EOF"
 
 for expter in "${!arr_port[@]}"
     do
-    netstat -lat | grep ${arr_port[${expter}]}  > /dev/null
+    sudo netstat -lntpu | grep ${arr_port[${expter}]}  > /dev/null
     if [[ $? == 1 ]] ; then
       default_port=${arr_port[${expter}]}
       #echo "Port is valid and the default port is ${arr_port[${expter}]}"
@@ -45,14 +52,12 @@ for expter in "${!arr_port[@]}"
       PROGNAME=${expter}_exporter
       PROG=/usr/local/bin/$PROGNAME
       USER=prometheus
-      GROUP=prometheus
-      LOGFILE=/var/log/$PROGNAME.log
-      LOCKFILE=/var/run/$PROGNAME.pid
-      # Chown for user
-      sudo chown $USER:$GROUP $LOGFILE
-      sudo chown $USER:$GROUP $LOCKFILE
-
-      cat << ADDPORT | sudo tee -a /etc/rc.d/init.d/${expter}_exporter
+      LOGFILE=/var/log/$USER/$PROGNAME.log
+      PIDFILE=/var/run/$USER/$PROGNAME.pid
+      LOCKFILE=/var/lock/subsys/$PROGNAME
+      RETVAL=0  
+      
+      sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/${expter}_exporter
 #!/bin/bash
 
 # Source function library.
@@ -61,24 +66,26 @@ for expter in "${!arr_port[@]}"
 PROGNAME=${PROGNAME}
 PROG=${PROG}
 USER=${USER}
-LOGFILE=/var/log/${PROGNAME}.log
-LOCKFILE=/var/run/${PROGNAME}.pid
-
+LOGFILE=${LOGFILE}
+PIDFILE=${PIDFILE}
 
 start() {
-    echo -n "Starting ${PROGNAME}: "
-    daemon --user ${USER} --pidfile="${LOGFILE}" "${PROG} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$default_port &>${LOGFILE} &"
+    echo -n "\"" Starting ${PROGNAME} "\"": 
+    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${CUR_DIR}/yaml_handler/parse_yml.sh ${expter}`$default_port &>${LOGFILE} &"\""
+    RETVAL=${RETVAL}
+    echo
+    [ ${RETVAL} -eq 0 ] && sudo touch ${LOCKFILE}
     echo
 }
 
 stop() {
-    echo -n "Shutting down ${PROGNAME}: "
+    echo -n "\"" Shutting down ${PROGNAME}: "\""
     killproc ${PROGNAME}
     rm -f ${LOCKFILE}
     echo
 }
 
-case "\$1" in
+case "\""\$1"\"" in
     start)
     start
     ;;
@@ -93,11 +100,11 @@ case "\$1" in
     start
     ;;
     *)
-        echo "Usage: service ${expter}_exporter {start|stop|status|reload|restart}"
+        echo  "\""Usage: service ${expter}_exporter {start|stop|status|reload|restart} "\""
         exit 1
     ;;
 esac
-ADDPORT
+EOF"
 
      cat << ADDTEXT | sudo tee -a /etc/merger.yaml
 #${expter}
@@ -111,9 +118,9 @@ ADDTEXT
         #echo "Your new port is: $newport "
         while true;
         do
-           netstat -lat | grep $newport > /dev/null
+           sudo netstat -lntpu | grep $newport > /dev/null
            if [ $? == 1 ] ; then
-             cat << ADDPORT | sudo tee -a /etc/rc.d/init.d/${expter}_exporter
+             sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/${expter}_exporter
 #!/bin/bash
 
 # Source function library.
@@ -122,24 +129,26 @@ ADDTEXT
 PROGNAME=${PROGNAME}
 PROG=${PROG}
 USER=${USER}
-LOGFILE=/var/log/${PROGNAME}.log
-LOCKFILE=/var/run/${PROGNAME}.pid
-
+LOGFILE=${LOGFILE}
+PIDFILE=${PIDFILE}
 
 start() {
-    echo -n "Starting ${PROGNAME}: "
-    daemon --user ${USER} --pidfile="${LOGFILE}" "${PROG} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport &>${LOGFILE} &"
+    echo -n "\"" Starting ${PROGNAME} "\"": 
+    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${CUR_DIR}/yaml_handler/parse_yml.sh ${expter}`$newport &>${LOGFILE} &"\""
+    RETVAL=${RETVAL}
+    echo
+    [ ${RETVAL} -eq 0 ] && sudo touch ${LOCKFILE}
     echo
 }
 
 stop() {
-    echo -n "Shutting down ${PROGNAME}: "
+    echo -n "\"" Shutting down ${PROGNAME}: "\""
     killproc ${PROGNAME}
     rm -f ${LOCKFILE}
     echo
 }
 
-case "\$1" in
+case "\""\$1"\"" in
     start)
     start
     ;;
@@ -154,11 +163,11 @@ case "\$1" in
     start
     ;;
     *)
-        echo "Usage: service ${expter}_exporter {start|stop|status|reload|restart}"
+        echo  "\""Usage: service ${expter}_exporter {start|stop|status|reload|restart} "\""
         exit 1
     ;;
 esac
-ADDPORT
+EOF"
              cat << ADDTEXT | sudo tee -a /etc/merger.yaml
 #${expter}
 - url: http://localhost:$newport/metrics
@@ -169,7 +178,7 @@ ADDTEXT
            else
              newport_rand=$(( newport + rd ))
              echo "Your new port is $newport_rand"
-             cat << ADDPORT | sudo tee -a /etc/rc.d/init.d/${expter}_exporter
+             sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/${expter}_exporter
 #!/bin/bash
 
 # Source function library.
@@ -178,23 +187,26 @@ ADDTEXT
 PROGNAME=${PROGNAME}
 PROG=${PROG}
 USER=${USER}
-LOGFILE=/var/log/${PROGNAME}.log
-LOCKFILE=/var/run/${PROGNAME}.pid
+LOGFILE=${LOGFILE}
+PIDFILE=${PIDFILE}
 
 start() {
-    echo -n "Starting ${PROGNAME}: "
-    daemon --user ${USER} --pidfile="${LOGFILE}" "${PROG} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport_rand &>${LOGFILE} &"
+    echo -n "\"" Starting ${PROGNAME} "\"": 
+    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${CUR_DIR}/yaml_handler/parse_yml.sh ${expter}`$newport_rand &>${LOGFILE} &"\""
+    RETVAL=${RETVAL}
+    echo
+    [ ${RETVAL} -eq 0 ] && sudo touch ${LOCKFILE}
     echo
 }
 
 stop() {
-    echo -n "Shutting down ${PROGNAME}: "
+    echo -n "\"" Shutting down ${PROGNAME}: "\""
     killproc ${PROGNAME}
     rm -f ${LOCKFILE}
     echo
 }
 
-case "\$1" in
+case "\""\$1"\"" in
     start)
     start
     ;;
@@ -209,11 +221,11 @@ case "\$1" in
     start
     ;;
     *)
-        echo "Usage: service ${expter}_exporter {start|stop|status|reload|restart}"
+        echo  "\""Usage: service ${expter}_exporter {start|stop|status|reload|restart} "\""
         exit 1
     ;;
 esac
-ADDPORT
+EOF"
 
              cat << ADDTEXT | sudo tee -a /etc/merger.yaml
 #${expter}
@@ -223,7 +235,8 @@ ADDTEXT
         done
     fi
  
- sudo chmod 755 /etc/init.d/*_exporter
+ sudo chown -R prometheus:prometheus /etc/rc.d/init.d/*_exporter
+ sudo chmod 755 /etc/rc.d/init.d/*_exporter
  sudo service ${expter}_exporter start
  sudo service ${expter}_exporter status
 done
@@ -232,18 +245,18 @@ done
 # CENTOS 7
 function centos_seven(){
 # Create a merger.yml file
-cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+sudo bash -c "cat << 'EOF' > /etc/merger.yaml
 exporters:
-ADDTEXT
+EOF"
 
 for expter in "${!arr_port[@]}"
   do
-    netstat -lat | grep ${arr_port[${expter}]}  > /dev/null
+    sudo netstat -lntpu | grep ${arr_port[${expter}]}  > /dev/null
     if [[ $? == 1 ]] ; then
       default_port=${arr_port[${expter}]}
       #echo "Port is valid and the default port is ${arr_port[${expter}]}"      
 # Create exporter service file
-      cat << ADDPORT | sudo tee -a /etc/systemd/system/${expter}_exporter.service
+      sudo bash -c "cat << 'EOF' > /etc/systemd/system/${expter}_exporter.service
 [Unit]
 Description=${expter} exporter
 Wants=network-online.target
@@ -257,7 +270,7 @@ ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/par
 
 [Install]
 WantedBy=multi-user.target
-ADDPORT
+EOF"
 
 # Add exporter url to merger.yml file
       cat << ADDTEXT | sudo tee -a /etc/merger.yaml
@@ -273,9 +286,9 @@ ADDTEXT
         #echo "Your new port is: $newport "
         while true; 
         do
-           netstat -lat | grep $newport > /dev/null
+           sudo netstat -lntpu | grep $newport > /dev/null
            if [ $? == 1 ] ; then
-             cat << ADDPORT | sudo tee -a /etc/systemd/system/${expter}_exporter.service
+             sudo bash -c "cat << 'EOF' >  /etc/systemd/system/${expter}_exporter.service
 [Unit]
 Description=${expter} exporter
 Wants=network-online.target
@@ -289,7 +302,7 @@ ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/par
 
 [Install]
 WantedBy=multi-user.target
-ADDPORT
+EOF"
 
              cat << ADDTEXT | sudo tee -a /etc/merger.yaml
 #${expter}
@@ -301,7 +314,7 @@ ADDTEXT
            else
              newport_rand=$(( newport + rd ))
              #echo "Your new port is $newport_rand"
-             cat << ADDPORT | sudo tee -a /etc/systemd/system/${expter}_exporter.service
+             sudo bash -c "cat << 'EOF' >  /etc/systemd/system/${expter}_exporter.service
 [Unit]
 Description=${expter} exporter
 Wants=network-online.target
@@ -315,7 +328,7 @@ ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/par
 
 [Install]
 WantedBy=multi-user.target
-ADDPORT
+EOF"
 
              cat << ADDTEXT | sudo tee -a /etc/merger.yaml
 #${expter}

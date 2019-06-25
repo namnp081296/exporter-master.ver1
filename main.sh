@@ -169,7 +169,7 @@ EOF'
            else
              newport_rand=$(( newport + rd ))
              echo "Your new port is $newport_rand"
-             cat << EOF | sudo tee -a /etc/rc.d/init.d/${expter}_exporter
+             sudo bash -c 'cat <<EOF > /etc/rc.d/init.d/${expter}_exporter
 #!/bin/bash
 
 # Source function library.
@@ -213,7 +213,7 @@ case "\$1" in
         exit 1
     ;;
 esac
-EOF
+EOF'
 
              sudo bash -c 'cat <<EOF > /etc/merger.yaml
 #${expter}
@@ -232,9 +232,9 @@ done
 # CENTOS 7
 function centos_seven(){
 # Create a merger.yml file
-cat << EOF | sudo tee -a /etc/merger.yaml
+sudo bash -c 'cat <<EOF > /etc/merger.yaml
 exporters:
-EOF
+EOF'
 
 for expter in "${!arr_port[@]}"
   do
@@ -243,7 +243,7 @@ for expter in "${!arr_port[@]}"
       default_port=${arr_port[${expter}]}
       #echo "Port is valid and the default port is ${arr_port[${expter}]}"      
 # Create exporter service file
-      cat << EOF | sudo tee -a /etc/systemd/system/${expter}_exporter.service
+      sudo bash -c 'cat <<EOF > /etc/systemd/system/${expter}_exporter.service
 [Unit]
 Description=${expter} exporter
 Wants=network-online.target
@@ -257,13 +257,13 @@ ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/par
 
 [Install]
 WantedBy=multi-user.target
-EOF
+EOF'
 
 # Add exporter url to merger.yml file
-      cat << EOF | sudo tee -a /etc/merger.yaml
+      sudo bash -c 'cat <<EOF > /etc/merger.yaml
 #${expter}
 - url: http://localhost:$default_port/metrics
-EOF
+EOF'
 
     else
         #echo "Port is in used"
@@ -275,7 +275,7 @@ EOF
         do
            netstat -lat | grep $newport > /dev/null
            if [ $? == 1 ] ; then
-             cat << EOF | sudo tee -a /etc/systemd/system/${expter}_exporter.service
+             sudo bash -c 'cat <<EOF > /etc/systemd/system/${expter}_exporter.service
 [Unit]
 Description=${expter} exporter
 Wants=network-online.target
@@ -289,19 +289,19 @@ ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/par
 
 [Install]
 WantedBy=multi-user.target
-EOF
+EOF'
 
-             cat << EOF | sudo tee -a /etc/merger.yaml
+             sudo bash -c 'cat <<EOF > /etc/merger.yaml
 #${expter}
 - url: http://localhost:$newport/metrics
-EOF
+EOF'
 
              #echo "Port $newport is validable"
              break;
            else
              newport_rand=$(( newport + rd ))
              #echo "Your new port is $newport_rand"
-             cat << EOF | sudo tee -a /etc/systemd/system/${expter}_exporter.service
+             sudo bash -c 'cat <<EOF > /etc/systemd/system/${expter}_exporter.service
 [Unit]
 Description=${expter} exporter
 Wants=network-online.target
@@ -315,12 +315,12 @@ ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/par
 
 [Install]
 WantedBy=multi-user.target
-EOF
+EOF'
 
-             cat << EOF | sudo tee -a /etc/merger.yaml
+             sudo bash -c 'cat <<EOF > /etc/merger.yaml
 #${expter}
 - url: http://localhost:$newport_rand/metrics
-EOF
+EOF'
 
            fi
         done

@@ -22,10 +22,10 @@ function random_unused_port() {
    shuf -i 1-100 -n 1
 }
 
-# function get_version_centos() {
-# #cat /etc/os-release | grep 'VERSION_ID=' | awk -F '=' '{print $2}' | awk -F "" '{print $2}'
-#     rpm -q --queryformat '%{VERSION}' centos-release
-# }
+function get_version_centos() {
+#cat /etc/os-release | grep 'VERSION_ID=' | awk -F '=' '{print $2}' | awk -F "" '{print $2}'
+    rpm -q --queryformat '%{VERSION}' centos-release
+}
 
 # FUNCTION FOR CENTOS 6
 function centos_six() {
@@ -225,119 +225,118 @@ ADDTEXT
 done
 }
 
-# # CENTOS 7
-# function centos_seven(){
-# # Create a merger.yml file
-# cat << ADDTEXT | sudo tee -a /etc/merger.yaml
-# exporters:
-# ADDTEXT
+# CENTOS 7
+function centos_seven(){
+# Create a merger.yml file
+cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+exporters:
+ADDTEXT
 
-# for expter in "${!arr_port[@]}"
-#   do
-#     netstat -lat | grep ${arr_port[${expter}]}  > /dev/null
-#     if [[ $? == 1 ]] ; then
-#       default_port=${arr_port[${expter}]}
-#       #echo "Port is valid and the default port is ${arr_port[${expter}]}"      
-# # Create exporter service file
-#       cat << ADDPORT | sudo tee -a /etc/systemd/system/${expter}_exporter.service
-# [Unit]
-# Description=${expter} exporter
-# Wants=network-online.target
-# After=network-online.target
+for expter in "${!arr_port[@]}"
+  do
+    netstat -lat | grep ${arr_port[${expter}]}  > /dev/null
+    if [[ $? == 1 ]] ; then
+      default_port=${arr_port[${expter}]}
+      #echo "Port is valid and the default port is ${arr_port[${expter}]}"      
+# Create exporter service file
+      cat << ADDPORT | sudo tee -a /etc/systemd/system/${expter}_exporter.service
+[Unit]
+Description=${expter} exporter
+Wants=network-online.target
+After=network-online.target
 
-# [Service]
-# User=prometheus
-# Group=prometheus
-# Type=simple
-# ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$default_port
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$default_port
 
-# [Install]
-# WantedBy=multi-user.target
-# ADDPORT
+[Install]
+WantedBy=multi-user.target
+ADDPORT
 
-# # Add exporter url to merger.yml file
-#       cat << ADDTEXT | sudo tee -a /etc/merger.yaml
-# #${expter}
-# - url: http://localhost:$default_port/metrics
-# ADDTEXT
+# Add exporter url to merger.yml file
+      cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+#${expter}
+- url: http://localhost:$default_port/metrics
+ADDTEXT
 
-#     else
-#         #echo "Port is in used"
-#         rd=$(random_unused_port)
-#         #echo "Random port is $rd"
-#         newport=$(( default_port + rd ))
-#         #echo "Your new port is: $newport "
-#         while true; 
-#         do
-#            netstat -lat | grep $newport > /dev/null
-#            if [ $? == 1 ] ; then
-#              cat << ADDPORT | sudo tee -a /etc/systemd/system/${expter}_exporter.service
-# [Unit]
-# Description=${expter} exporter
-# Wants=network-online.target
-# After=network-online.target
+    else
+        #echo "Port is in used"
+        rd=$(random_unused_port)
+        #echo "Random port is $rd"
+        newport=$(( default_port + rd ))
+        #echo "Your new port is: $newport "
+        while true; 
+        do
+           netstat -lat | grep $newport > /dev/null
+           if [ $? == 1 ] ; then
+             cat << ADDPORT | sudo tee -a /etc/systemd/system/${expter}_exporter.service
+[Unit]
+Description=${expter} exporter
+Wants=network-online.target
+After=network-online.target
 
-# [Service]
-# User=prometheus
-# Group=prometheus
-# Type=simple
-# ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport
 
-# [Install]
-# WantedBy=multi-user.target
-# ADDPORT
+[Install]
+WantedBy=multi-user.target
+ADDPORT
 
-#              cat << ADDTEXT | sudo tee -a /etc/merger.yaml
-# #${expter}
-# - url: http://localhost:$newport/metrics
-# ADDTEXT
+             cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+#${expter}
+- url: http://localhost:$newport/metrics
+ADDTEXT
 
-#              #echo "Port $newport is validable"
-#              break;
-#            else
-#              newport_rand=$(( newport + rd ))
-#              #echo "Your new port is $newport_rand"
-#              cat << ADDPORT | sudo tee -a /etc/systemd/system/${expter}_exporter.service
-# [Unit]
-# Description=${expter} exporter
-# Wants=network-online.target
-# After=network-online.target
+             #echo "Port $newport is validable"
+             break;
+           else
+             newport_rand=$(( newport + rd ))
+             #echo "Your new port is $newport_rand"
+             cat << ADDPORT | sudo tee -a /etc/systemd/system/${expter}_exporter.service
+[Unit]
+Description=${expter} exporter
+Wants=network-online.target
+After=network-online.target
 
-# [Service]
-# User=prometheus
-# Group=prometheus
-# Type=simple
-# ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport_rand
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport_rand
 
-# [Install]
-# WantedBy=multi-user.target
-# ADDPORT
+[Install]
+WantedBy=multi-user.target
+ADDPORT
 
-#              cat << ADDTEXT | sudo tee -a /etc/merger.yaml
-# #${expter}
-# - url: http://localhost:$newport_rand/metrics
-# ADDTEXT
+             cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+#${expter}
+- url: http://localhost:$newport_rand/metrics
+ADDTEXT
 
-#            fi
-#         done
-#     fi
+           fi
+        done
+    fi
 
-# # Reload daemon then start, enable and check status.
-# sudo systemctl daemon-reload
-# sudo systemctl start ${expter}_exporter.service
-# sudo systemctl enable ${expter}_exporter.service
-# sudo systemctl status ${expter}_exporter.service
-# done
+# Reload daemon then start, enable and check status.
+sudo systemctl daemon-reload
+sudo systemctl start ${expter}_exporter.service
+sudo systemctl enable ${expter}_exporter.service
+sudo systemctl status ${expter}_exporter.service
+done
 
-# }
+}
 
 function main() {
-    # ver=$(get_version_centos)
-    # if [[ $ver == 7 ]] ; then 
-    #    centos_seven
-    # else
-    #    centos_six
-    # fi
-    centos_six
+    ver=$(get_version_centos)
+    if [[ $ver == 7 ]] ; then 
+       centos_seven
+    else
+       centos_six
+    fi
 }
 main

@@ -29,5 +29,5 @@ memcached:
   param: "--web.listen-address:"
 
 couchbase:
-  param: "-db.uri=http://localhost: -web.listen-address:127.0.0.1:"
+  param: "-db.uri=http://localhost:8091 -web.listen-address:127.0.0.1:"
 

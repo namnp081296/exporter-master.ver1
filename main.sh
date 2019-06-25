@@ -14,7 +14,7 @@ sudo chown prometheus:prometheus /usr/local/bin/*_exporter
 newport=0
 # Create Array list with key: name of service and value: port of service
 declare -A arr_port
-arr_port+=( ["php_fpm"]=8080 ["mongodb"]=9001 ["node"]=9100 ["mysqld"]=9104 ["redis"]=9121 ["nginx"]=9913 ["merger"]=39000 ["couchbase"]=9191 ["kafka"]=9308 ["haproxy"]=9101 ["memcached"]=9150 )
+arr_port+=( ["php_fpm"]=8080 ["mongodb"]=9001 ["node"]=9100 ["mysqld"]=9104 ["redis"]=9121 ["nginx"]=9913 ["merger"]=39000 )
 
 # Function Random port
 function random_unused_port() {

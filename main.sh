@@ -41,12 +41,16 @@ for expter in "${!arr_port[@]}"
       default_port=${arr_port[${expter}]}
       #echo "Port is valid and the default port is ${arr_port[${expter}]}"
       
-      # Create variable for 
+      # Create variable for running exporter
       PROGNAME=${expter}_exporter
       PROG=/usr/local/bin/$PROGNAME
       USER=prometheus
+      GROUP=prometheus
       LOGFILE=/var/log/$PROGNAME.log
       LOCKFILE=/var/run/$PROGNAME.pid
+      # Set owner for .log and .pid
+      sudo chown $USER:$GROUP $LOGFILE
+      sudo chown $USER:$GROUP $LOCKFILE
 
       cat << ADDPORT | sudo tee -a /etc/rc.d/init.d/${expter}_exporter
 #!/bin/bash

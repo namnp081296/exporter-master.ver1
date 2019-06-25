@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# cd ~
+ cd ~
 # Create folder to save all service backup file
 # mkdir service_backup
 
 # Copy all binary file from current folder to /usr/local/bin 
-# sudo cp ~/exporter/bin/* /usr/local/bin
+sudo cp ~/exporter/bin/* /usr/local/bin
 
 # Create user with no create home and set owner to run exporter
 # sudo useradd --no-create-home --shell /bin/false prometheus

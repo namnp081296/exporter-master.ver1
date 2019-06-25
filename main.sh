@@ -30,9 +30,9 @@ function get_version_centos() {
 # FUNCTION FOR CENTOS 6
 function centos_six() {
 # Create a merger.yml file
-cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+sudo bash -c 'cat <<EOF > /etc/merger.yaml
 exporters:
-ADDTEXT
+EOF'
 
 for expter in "${!arr_port[@]}"
     do
@@ -52,7 +52,7 @@ for expter in "${!arr_port[@]}"
       sudo chown $USER:$GROUP $LOGFILE
       sudo chown $USER:$GROUP $LOCKFILE
 
-      cat << ADDPORT | sudo tee -a /etc/rc.d/init.d/${expter}_exporter
+      sudo bash -c 'cat <<EOF > /etc/rc.d/init.d/${expter}_exporter
 #!/bin/bash
 
 # Source function library.
@@ -97,12 +97,12 @@ case "\$1" in
         exit 1
     ;;
 esac
-ADDPORT
+EOF'
 
-     cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+     sudo bash -c 'cat <<EOF > /etc/merger.yaml
 #${expter}
 - url: http://localhost:$default_port/metrics
-ADDTEXT
+EOF'
     else
         #echo "Port is in used"
         rd=$(random_unused_port)
@@ -113,7 +113,7 @@ ADDTEXT
         do
            netstat -lat | grep $newport > /dev/null
            if [ $? == 1 ] ; then
-             cat << ADDPORT | sudo tee -a /etc/rc.d/init.d/${expter}_exporter
+             sudo bash -c 'cat <<EOF > /etc/rc.d/init.d/${expter}_exporter
 #!/bin/bash
 
 # Source function library.
@@ -158,18 +158,18 @@ case "\$1" in
         exit 1
     ;;
 esac
-ADDPORT
-             cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+EOF'
+             sudo bash -c 'cat <<EOF > /etc/merger.yaml
 #${expter}
 - url: http://localhost:$newport/metrics
-ADDTEXT
+EOF'
 
              echo "Port $newport is validable"
              break;
            else
              newport_rand=$(( newport + rd ))
              echo "Your new port is $newport_rand"
-             cat << ADDPORT | sudo tee -a /etc/rc.d/init.d/${expter}_exporter
+             cat << EOF | sudo tee -a /etc/rc.d/init.d/${expter}_exporter
 #!/bin/bash
 
 # Source function library.
@@ -213,12 +213,12 @@ case "\$1" in
         exit 1
     ;;
 esac
-ADDPORT
+EOF
 
-             cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+             sudo bash -c 'cat <<EOF > /etc/merger.yaml
 #${expter}
 - url: http://localhost:$newport_rand/metrics
-ADDTEXT
+EOF'
            fi
         done
     fi
@@ -232,9 +232,9 @@ done
 # CENTOS 7
 function centos_seven(){
 # Create a merger.yml file
-cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+cat << EOF | sudo tee -a /etc/merger.yaml
 exporters:
-ADDTEXT
+EOF
 
 for expter in "${!arr_port[@]}"
   do
@@ -243,7 +243,7 @@ for expter in "${!arr_port[@]}"
       default_port=${arr_port[${expter}]}
       #echo "Port is valid and the default port is ${arr_port[${expter}]}"      
 # Create exporter service file
-      cat << ADDPORT | sudo tee -a /etc/systemd/system/${expter}_exporter.service
+      cat << EOF | sudo tee -a /etc/systemd/system/${expter}_exporter.service
 [Unit]
 Description=${expter} exporter
 Wants=network-online.target
@@ -257,13 +257,13 @@ ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/par
 
 [Install]
 WantedBy=multi-user.target
-ADDPORT
+EOF
 
 # Add exporter url to merger.yml file
-      cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+      cat << EOF | sudo tee -a /etc/merger.yaml
 #${expter}
 - url: http://localhost:$default_port/metrics
-ADDTEXT
+EOF
 
     else
         #echo "Port is in used"
@@ -275,7 +275,7 @@ ADDTEXT
         do
            netstat -lat | grep $newport > /dev/null
            if [ $? == 1 ] ; then
-             cat << ADDPORT | sudo tee -a /etc/systemd/system/${expter}_exporter.service
+             cat << EOF | sudo tee -a /etc/systemd/system/${expter}_exporter.service
 [Unit]
 Description=${expter} exporter
 Wants=network-online.target
@@ -289,19 +289,19 @@ ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/par
 
 [Install]
 WantedBy=multi-user.target
-ADDPORT
+EOF
 
-             cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+             cat << EOF | sudo tee -a /etc/merger.yaml
 #${expter}
 - url: http://localhost:$newport/metrics
-ADDTEXT
+EOF
 
              #echo "Port $newport is validable"
              break;
            else
              newport_rand=$(( newport + rd ))
              #echo "Your new port is $newport_rand"
-             cat << ADDPORT | sudo tee -a /etc/systemd/system/${expter}_exporter.service
+             cat << EOF | sudo tee -a /etc/systemd/system/${expter}_exporter.service
 [Unit]
 Description=${expter} exporter
 Wants=network-online.target
@@ -315,12 +315,12 @@ ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/par
 
 [Install]
 WantedBy=multi-user.target
-ADDPORT
+EOF
 
-             cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+             cat << EOF | sudo tee -a /etc/merger.yaml
 #${expter}
 - url: http://localhost:$newport_rand/metrics
-ADDTEXT
+EOF
 
            fi
         done

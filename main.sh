@@ -1,15 +1,14 @@
 #!/bin/bash
 
- cd ~
 # Create folder to save all service backup file
 # mkdir service_backup
+CUR_DIR=`pwd`
 
 # Copy all binary file from current folder to /usr/local/bin 
-sudo cp ~/exporter/bin/* /usr/local/bin
+sudo cp $CUR_DIR/bin/* /usr/local/bin
 
 # Create user with no create home and set owner to run exporter
-# sudo useradd --no-create-home --shell /bin/false prometheus
-# sudo chown prometheus:prometheus /usr/local/bin/*_exporter
+sudo chown prometheus:prometheus /usr/local/bin/*_exporter
 
 # Before we start running exporter. We should check existing port in server
 newport=0
@@ -63,7 +62,7 @@ LOCKFILE=/var/run/${PROGNAME}.pid
 
 start() {
     echo -n "Starting ${PROGNAME}: "
-    daemon --user ${USER} --pidfile="${LOGFILE}" "${PROG} `/bin/bash ~/exporter/yaml_handler/parse_yml.sh ${expter}`$default_port &>${LOGFILE} &"
+    daemon --user ${USER} --pidfile="${LOGFILE}" "${PROG} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$default_port &>${LOGFILE} &"
     echo
 }
 
@@ -124,7 +123,7 @@ LOCKFILE=/var/run/${PROGNAME}.pid
 
 start() {
     echo -n "Starting ${PROGNAME}: "
-    daemon --user ${USER} --pidfile="${LOGFILE}" "${PROG} `/bin/bash ~/exporter/yaml_handler/parse_yml.sh ${expter}`$newport &>${LOGFILE} &"
+    daemon --user ${USER} --pidfile="${LOGFILE}" "${PROG} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport &>${LOGFILE} &"
     echo
 }
 
@@ -179,7 +178,7 @@ LOCKFILE=/var/run/${PROGNAME}.pid
 
 start() {
     echo -n "Starting ${PROGNAME}: "
-    daemon --user ${USER} --pidfile="${LOGFILE}" "${PROG} `/bin/bash ~/exporter/yaml_handler/parse_yml.sh ${expter}`$newport_rand &>${LOGFILE} &"
+    daemon --user ${USER} --pidfile="${LOGFILE}" "${PROG} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport_rand &>${LOGFILE} &"
     echo
 }
 
@@ -249,7 +248,7 @@ After=network-online.target
 User=prometheus
 Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash ~/exporter/yaml_handler/parse_yml.sh ${expter}`$default_port
+ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$default_port
 
 [Install]
 WantedBy=multi-user.target
@@ -281,7 +280,7 @@ After=network-online.target
 User=prometheus
 Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash ~/exporter/yaml_handler/parse_yml.sh ${expter}`$newport
+ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport
 
 [Install]
 WantedBy=multi-user.target
@@ -307,7 +306,7 @@ After=network-online.target
 User=prometheus
 Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash ~/exporter/yaml_handler/parse_yml.sh ${expter}`$newport_rand
+ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport_rand
 
 [Install]
 WantedBy=multi-user.target

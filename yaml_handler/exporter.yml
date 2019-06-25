@@ -18,3 +18,16 @@ redis:
 
 merger:
   param: "-c /etc/merger.yaml --listen-port "
+
+haproxy:
+  param: "--web.listen-address:"
+
+kafka:
+  param: "--web.listen-address:"
+
+memcached:
+  param: "--web.listen-address:"
+
+couchbase:
+  param: "-web.listen-address:"
+

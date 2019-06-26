@@ -108,10 +108,11 @@ case "\""\$1"\"" in
     ;;
 esac
 EOF"
-       cat << ADDTEXT | sudo tee -a /etc/merger.yaml
-#${expter}
-- url: http://localhost:$merger_port/metrics
-ADDTEXT
+
+#        cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+# #${expter}
+# - url: http://localhost:$merger_port/metrics
+# ADDTEXT
 
        else
          sudo netstat -lntp | grep $ser  > /dev/null
@@ -331,10 +332,11 @@ ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $CUR_DIR/yaml_handler/par
 [Install]
 WantedBy=multi-user.target
 EOF"
-       cat << ADDTEXT | sudo tee -a /etc/merger.yaml
-#${expter}
-- url: http://localhost:$merger_port/metrics
-ADDTEXT
+
+#        cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+# #${expter}
+# - url: http://localhost:$merger_port/metrics
+# ADDTEXT
 
     else
        sudo netstat -lntp | grep $ser  > /dev/null

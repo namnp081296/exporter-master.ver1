@@ -49,18 +49,18 @@ EOF"
 
 for expter in "${arr_port[@]}"
     do
-    if [[ ${expter} == "merger" ]] ; then
-       merger_port=11011
+      if [[ ${expter} == "merger" ]] ; then
+        merger_port=11011
 
-       PROGNAME=exporter_${expter}
-       PROG=/usr/local/bin/$PROGNAME
-       USER=prometheus
-       LOGFILE=/var/log/$USER/$PROGNAME.log
-       PIDFILE=/var/run/$USER/$PROGNAME.pid
-       LOCKFILE=/var/lock/subsys/$PROGNAME
-       RETVAL=0
+        PROGNAME=exporter_${expter}
+        PROG=/usr/local/bin/$PROGNAME
+        USER=prometheus
+        LOGFILE=/var/log/$USER/$PROGNAME.log
+        PIDFILE=/var/run/$USER/$PROGNAME.pid
+        LOCKFILE=/var/lock/subsys/$PROGNAME
+        RETVAL=0
 
-       sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
+        sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
 #!/bin/bash
 
 # Source function library.
@@ -113,21 +113,21 @@ EOF"
 - url: http://localhost:$merger_port/metrics
 ADDTEXT
 
-    else
-      sudo netstat -lntpu | grep $ser  > /dev/null
-      if [[ $? == 1 ]] ; then
-      service_port=$ser
+      else
+        sudo netstat -lntp | grep $ser  > /dev/null
+        if [[ $? == 1 ]] ; then
+        service_port=$ser
            
       # Create variable for running exporter
-      PROGNAME=${expter}_exporter
-      PROG=/usr/local/bin/$PROGNAME
-      USER=prometheus
-      LOGFILE=/var/log/$USER/$PROGNAME.log
-      PIDFILE=/var/run/$USER/$PROGNAME.pid
-      LOCKFILE=/var/lock/subsys/$PROGNAME
-      RETVAL=0  
+        PROGNAME=exporter_${expter}
+        PROG=/usr/local/bin/$PROGNAME
+        USER=prometheus
+        LOGFILE=/var/log/$USER/$PROGNAME.log
+        PIDFILE=/var/run/$USER/$PROGNAME.pid
+        LOCKFILE=/var/lock/subsys/$PROGNAME
+        RETVAL=0  
       
-      sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/${expter}_exporter
+        sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
 #!/bin/bash
 
 # Source function library.
@@ -170,7 +170,7 @@ case "\""\$1"\"" in
     start
     ;;
     *)
-        echo  "\""Usage: service ${expter}_exporter {start|stop|status|reload|restart} "\""
+        echo  "\""Usage: service exporter_${expter} {start|stop|status|reload|restart} "\""
         exit 1
     ;;
 esac
@@ -188,9 +188,9 @@ ADDTEXT
         #echo "Your new port is: $newport "
         while true;
         do
-           sudo netstat -lntpu | grep $newport > /dev/null
+           sudo netstat -lntp | grep $newport > /dev/null
            if [ $? == 1 ] ; then
-             sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/${expter}_exporter
+             sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
 #!/bin/bash
 
 # Source function library.
@@ -233,7 +233,7 @@ case "\""\$1"\"" in
     start
     ;;
     *)
-        echo  "\""Usage: service ${expter}_exporter {start|stop|status|reload|restart} "\""
+        echo  "\""Usage: service exporter_${expter} {start|stop|status|reload|restart} "\""
         exit 1
     ;;
 esac
@@ -248,7 +248,7 @@ ADDTEXT
            else
              newport_rand=$(( newport + rd ))
              echo "Your new port is $newport_rand"
-             sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/${expter}_exporter
+             sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
 #!/bin/bash
 
 # Source function library.
@@ -291,7 +291,7 @@ case "\""\$1"\"" in
     start
     ;;
     *)
-        echo  "\""Usage: service ${expter}_exporter {start|stop|status|reload|restart} "\""
+        echo  "\""Usage: service exporter_${expter} {start|stop|status|reload|restart} "\""
         exit 1
     ;;
 esac
@@ -305,10 +305,11 @@ ADDTEXT
         done
     fi
  fi
- sudo chown -R prometheus:prometheus /etc/rc.d/init.d/*_exporter
- sudo chmod 755 /etc/rc.d/init.d/*_exporter
- sudo service ${expter}_exporter start
- sudo service ${expter}_exporter status
+ sudo chown -R prometheus:prometheus /etc/rc.d/init.d/exporter_*
+ sudo chmod 755 /etc/rc.d/init.d/exporter_*
+ sudo service exporter_${expter} start
+ sudo service exporter_${expter} status
+
 done
 }
 
@@ -419,7 +420,7 @@ After=network-online.target
 User=prometheus
 Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport_rand
+ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport_rand
 
 [Install]
 WantedBy=multi-user.target

@@ -22,11 +22,11 @@ sudo chown -R prometheus:prometheus /var/run/prometheus
 newport=0
 # Create Array list with key: name of service and value: port of service
 declare -A arr_port
-arr_port+=( ["php_fpm"]=8080 ["mongodb"]=9001 ["node"]=9100 ["mysqld"]=9104 ["redis"]=9121 ["nginx"]=9913 ["merger"]=39000 ["haproxy"]=9101 ["kafka"]=9308 ["memcached"]=9150 ["couchbase"]=9191 )
+arr_port+=( ["php_fpm"]=8080 ["mongodb"]=9001 ["node"]=9100 ["mysqld"]=9104 ["redis"]=9121 ["nginx"]=9913 ["merger"]=11011 ["haproxy"]=9101 ["kafka"]=9308 ["memcached"]=9150 ["couchbase"]=9191 )
 
 # Function Random port
 function random_unused_port() {
-   shuf -i 1-100 -n 1
+   shuf -i 11020-11050 -n 1
 }
 
 function get_version_centos() {

@@ -49,16 +49,16 @@ EOF"
 
 for expter in "${arr_port[@]}"
     do
+       PROGNAME=exporter_${expter}
+       PROG=/usr/local/bin/$PROGNAME
+       USER=prometheus
+       LOGFILE=/var/log/$USER/$PROGNAME.log
+       PIDFILE=/var/run/$USER/$PROGNAME.pid
+       LOCKFILE=/var/lock/subsys/$PROGNAME
+       RETVAL=0
+       
        if [[ ${expter} == "merger" ]] ; then
          merger_port=11011
-
-         PROGNAME=exporter_${expter}
-         PROG=/usr/local/bin/$PROGNAME
-         USER=prometheus
-         LOGFILE=/var/log/$USER/$PROGNAME.log
-         PIDFILE=/var/run/$USER/$PROGNAME.pid
-         LOCKFILE=/var/lock/subsys/$PROGNAME
-         RETVAL=0
 
          sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
 #!/bin/bash
@@ -118,15 +118,6 @@ ADDTEXT
          if [[ $? == 1 ]] ; then
          service_port=$ser
            
-         # Create variable for running exporter
-         PROGNAME=exporter_${expter}
-         PROG=/usr/local/bin/$PROGNAME
-         USER=prometheus
-         LOGFILE=/var/log/$USER/$PROGNAME.log
-         PIDFILE=/var/run/$USER/$PROGNAME.pid
-         LOCKFILE=/var/lock/subsys/$PROGNAME
-         RETVAL=0  
-      
          sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
 #!/bin/bash
 

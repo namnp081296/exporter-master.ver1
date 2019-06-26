@@ -442,6 +442,7 @@ done
 
 }
 
+## MAIN FUNCTION ###
 function main() {
     ver=$(get_version_centos)
     if [[ $ver == 7 ]] ; then 

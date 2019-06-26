@@ -49,18 +49,18 @@ EOF"
 
 for expter in "${arr_port[@]}"
     do
-      if [[ ${expter} == "merger" ]] ; then
-        merger_port=11011
+       if [[ ${expter} == "merger" ]] ; then
+         merger_port=11011
 
-        PROGNAME=exporter_${expter}
-        PROG=/usr/local/bin/$PROGNAME
-        USER=prometheus
-        LOGFILE=/var/log/$USER/$PROGNAME.log
-        PIDFILE=/var/run/$USER/$PROGNAME.pid
-        LOCKFILE=/var/lock/subsys/$PROGNAME
-        RETVAL=0
+         PROGNAME=exporter_${expter}
+         PROG=/usr/local/bin/$PROGNAME
+         USER=prometheus
+         LOGFILE=/var/log/$USER/$PROGNAME.log
+         PIDFILE=/var/run/$USER/$PROGNAME.pid
+         LOCKFILE=/var/lock/subsys/$PROGNAME
+         RETVAL=0
 
-        sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
+         sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
 #!/bin/bash
 
 # Source function library.
@@ -113,21 +113,21 @@ EOF"
 - url: http://localhost:$merger_port/metrics
 ADDTEXT
 
-      else
-        sudo netstat -lntp | grep $ser  > /dev/null
-        if [[ $? == 1 ]] ; then
-        service_port=$ser
+       else
+         sudo netstat -lntp | grep $ser  > /dev/null
+         if [[ $? == 1 ]] ; then
+         service_port=$ser
            
-      # Create variable for running exporter
-        PROGNAME=exporter_${expter}
-        PROG=/usr/local/bin/$PROGNAME
-        USER=prometheus
-        LOGFILE=/var/log/$USER/$PROGNAME.log
-        PIDFILE=/var/run/$USER/$PROGNAME.pid
-        LOCKFILE=/var/lock/subsys/$PROGNAME
-        RETVAL=0  
+         # Create variable for running exporter
+         PROGNAME=exporter_${expter}
+         PROG=/usr/local/bin/$PROGNAME
+         USER=prometheus
+         LOGFILE=/var/log/$USER/$PROGNAME.log
+         PIDFILE=/var/run/$USER/$PROGNAME.pid
+         LOCKFILE=/var/lock/subsys/$PROGNAME
+         RETVAL=0  
       
-        sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
+         sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
 #!/bin/bash
 
 # Source function library.
@@ -242,12 +242,10 @@ EOF"
 #${expter}
 - url: http://localhost:$newport/metrics
 ADDTEXT
-
-             echo "Port $newport is validable"
+        
              break;
            else
              newport_rand=$(( newport + rd ))
-             echo "Your new port is $newport_rand"
              sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
 #!/bin/bash
 

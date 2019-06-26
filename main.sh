@@ -9,8 +9,8 @@ sudo cp $CUR_DIR/bin/* /usr/local/bin
 
 # Create user with no create home and set owner to run exporter
 sudo useradd --no-create-home --shell /bin/false prometheus
-sudo chown -R prometheus:prometheus /usr/local/bin/*_exporter
-sudo chmod +x /usr/local/bin/*_exporter
+sudo chown -R prometheus:prometheus /usr/local/bin/exporter_*
+sudo chmod +x /usr/local/bin/exporter_*
 
 # Create folder log and run for user:prometheus
 sudo mkdir -p /var/log/prometheus/

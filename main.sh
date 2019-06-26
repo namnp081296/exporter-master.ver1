@@ -22,11 +22,15 @@ sudo chown -R prometheus:prometheus /var/run/prometheus
 newport=0
 # Create Array list with key: name of service and value: port of service
 declare -A arr_port
-arr_port+=( ["php_fpm"]=8080 ["mongodb"]=9001 ["node"]=9100 ["mysqld"]=9104 ["redis"]=9121 ["nginx"]=9913 ["merger"]=11011 ["haproxy"]=9101 ["kafka"]=9308 ["memcached"]=9150 ["couchbase"]=9191 )
+arr_port+=("php_fpm" "mongodb" "node" "mysqld" "redis" "nginx" "merger" "haproxy" "kafka" "memcached" "couchbase")
 
 # Function Random port
-function random_unused_port() {
+function random_service_port() {
    shuf -i 11020-11050 -n 1
+}
+
+function random_unused_port() {
+   shuf -i 1-100 -n 1
 }
 
 function get_version_centos() {
@@ -36,18 +40,84 @@ function get_version_centos() {
 
 # FUNCTION FOR CENTOS 6
 function centos_six() {
+
+ser=$(random_service_port)
 # Create a merger.yml file
 sudo bash -c "cat << 'EOF' > /etc/merger.yaml
 exporters:
 EOF"
 
-for expter in "${!arr_port[@]}"
+for expter in "${arr_port[@]}"
     do
-    sudo netstat -lntpu | grep ${arr_port[${expter}]}  > /dev/null
-    if [[ $? == 1 ]] ; then
-      default_port=${arr_port[${expter}]}
-      #echo "Port is valid and the default port is ${arr_port[${expter}]}"
-      
+    if [[ ${expter} == "merger" ]] ; then
+       merger_port=11011
+
+       PROGNAME=exporter_${expter}
+       PROG=/usr/local/bin/$PROGNAME
+       USER=prometheus
+       LOGFILE=/var/log/$USER/$PROGNAME.log
+       PIDFILE=/var/run/$USER/$PROGNAME.pid
+       LOCKFILE=/var/lock/subsys/$PROGNAME
+       RETVAL=0
+
+       sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
+#!/bin/bash
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+PROGNAME=${PROGNAME}
+PROG=${PROG}
+USER=${USER}
+LOGFILE=${LOGFILE}
+PIDFILE=${PIDFILE}
+
+start() {
+    echo -n "\"" Starting ${PROGNAME} "\"":
+    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${CUR_DIR}/yaml_handler/parse_yml.sh ${expter}`$merger_port &>${LOGFILE} &"\""
+    RETVAL=${RETVAL}
+    echo
+    [ ${RETVAL} -eq 0 ] && sudo touch ${LOCKFILE}
+    echo
+}
+
+stop() {
+    echo -n "\"" Shutting down ${PROGNAME}: "\""
+    killproc ${PROGNAME}
+    rm -f ${LOCKFILE}
+    echo
+}
+
+case "\""\$1"\"" in
+    start)
+    start
+    ;;
+    stop)
+    stop
+    ;;
+    status)
+    status ${PROGNAME}
+    ;;
+    restart)
+    stop
+    start
+    ;;
+    *)
+        echo  "\""Usage: service exporter_${expter} {start|stop|status|reload|restart} "\""
+        exit 1
+    ;;
+esac
+EOF"
+       cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+#${expter}
+- url: http://localhost:$merger_port/metrics
+ADDTEXT
+
+    else
+      sudo netstat -lntpu | grep $ser  > /dev/null
+      if [[ $? == 1 ]] ; then
+      service_port=$ser
+           
       # Create variable for running exporter
       PROGNAME=${expter}_exporter
       PROG=/usr/local/bin/$PROGNAME
@@ -71,7 +141,7 @@ PIDFILE=${PIDFILE}
 
 start() {
     echo -n "\"" Starting ${PROGNAME} "\"": 
-    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${CUR_DIR}/yaml_handler/parse_yml.sh ${expter}`$default_port &>${LOGFILE} &"\""
+    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${CUR_DIR}/yaml_handler/parse_yml.sh ${expter}`$service_port &>${LOGFILE} &"\""
     RETVAL=${RETVAL}
     echo
     [ ${RETVAL} -eq 0 ] && sudo touch ${LOCKFILE}
@@ -108,13 +178,13 @@ EOF"
 
      cat << ADDTEXT | sudo tee -a /etc/merger.yaml
 #${expter}
-- url: http://localhost:$default_port/metrics
+- url: http://localhost:$service_port/metrics
 ADDTEXT
     else
         #echo "Port is in used"
         rd=$(random_unused_port)
         #echo "Random port is $rd"
-        newport=$(( default_port + rd ))
+        newport=$(( service_port + rd ))
         #echo "Your new port is: $newport "
         while true;
         do
@@ -244,21 +314,21 @@ done
 
 # CENTOS 7
 function centos_seven(){
+
+ser=$(random_service_port)
+
 # Create a merger.yml file
 sudo bash -c "cat << 'EOF' > /etc/merger.yaml
 exporters:
 EOF"
 
-for expter in "${!arr_port[@]}"
+for expter in "${arr_port[@]}"
   do
-    sudo netstat -lntpu | grep ${arr_port[${expter}]}  > /dev/null
-    if [[ $? == 1 ]] ; then
-      default_port=${arr_port[${expter}]}
-      #echo "Port is valid and the default port is ${arr_port[${expter}]}"      
-# Create exporter service file
-      sudo bash -c "cat << 'EOF' > /etc/systemd/system/${expter}_exporter.service
+    if [[ ${expter} == "merger" ]] ; then
+       merger_port=11011
+       sudo bash -c "cat << 'EOF' > /etc/systemd/system/exporter_${expter}.service
 [Unit]
-Description=${expter} exporter
+Description= exporter ${expter}
 Wants=network-online.target
 After=network-online.target
 
@@ -266,7 +336,32 @@ After=network-online.target
 User=prometheus
 Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$default_port
+ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$merger_port
+
+[Install]
+WantedBy=multi-user.target
+EOF"
+       cat << ADDTEXT | sudo tee -a /etc/merger.yaml
+#${expter}
+- url: http://localhost:$merger_port/metrics
+ADDTEXT
+
+    else
+       sudo netstat -lntp | grep $ser  > /dev/null
+       if [[ $? == 1 ]] ; then
+          service_port=$ser
+          # Create exporter service file
+          sudo bash -c "cat << 'EOF' > /etc/systemd/system/exporter_${expter}.service
+[Unit]
+Description= exporter ${expter}
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$service_port
 
 [Install]
 WantedBy=multi-user.target
@@ -275,22 +370,22 @@ EOF"
 # Add exporter url to merger.yml file
       cat << ADDTEXT | sudo tee -a /etc/merger.yaml
 #${expter}
-- url: http://localhost:$default_port/metrics
+- url: http://localhost:$service_port/metrics
 ADDTEXT
 
-    else
+       else
         #echo "Port is in used"
         rd=$(random_unused_port)
         #echo "Random port is $rd"
-        newport=$(( default_port + rd ))
+        newport=$(( service_port + rd ))
         #echo "Your new port is: $newport "
-        while true; 
+        while true;
         do
-           sudo netstat -lntpu | grep $newport > /dev/null
+           sudo netstat -lntp | grep $newport > /dev/null
            if [ $? == 1 ] ; then
-             sudo bash -c "cat << 'EOF' >  /etc/systemd/system/${expter}_exporter.service
+             sudo bash -c "cat << 'EOF' >  /etc/systemd/system/exporter_${expter}.service
 [Unit]
-Description=${expter} exporter
+Description= exporter ${expter}
 Wants=network-online.target
 After=network-online.target
 
@@ -298,7 +393,7 @@ After=network-online.target
 User=prometheus
 Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/${expter}_exporter `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport
+ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport
 
 [Install]
 WantedBy=multi-user.target
@@ -314,9 +409,9 @@ ADDTEXT
            else
              newport_rand=$(( newport + rd ))
              #echo "Your new port is $newport_rand"
-             sudo bash -c "cat << 'EOF' >  /etc/systemd/system/${expter}_exporter.service
+             sudo bash -c "cat << 'EOF' >  /etc/systemd/system/exporter_${expter}.service
 [Unit]
-Description=${expter} exporter
+Description= exporter ${expter}
 Wants=network-online.target
 After=network-online.target
 
@@ -334,16 +429,15 @@ EOF"
 #${expter}
 - url: http://localhost:$newport_rand/metrics
 ADDTEXT
-
            fi
         done
-    fi
-
+      fi
+   fi
 # Reload daemon then start, enable and check status.
 sudo systemctl daemon-reload
-sudo systemctl start ${expter}_exporter.service
-sudo systemctl enable ${expter}_exporter.service
-sudo systemctl status ${expter}_exporter.service
+sudo systemctl start exporter_${expter}.service
+sudo systemctl enable exporter_${expter}.service
+sudo systemctl status exporter_${expter}.service
 done
 
 }

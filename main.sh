@@ -21,8 +21,8 @@ sudo chown -R prometheus:prometheus /var/run/prometheus
 # Before we start running exporter. We should check existing port in server
 newport=0
 # Create Array list with key: name of service and value: port of service
-declare -A arr_port
-arr_port+=("php_fpm" "mongodb" "node" "mysqld" "redis" "nginx" "merger" "haproxy" "kafka" "memcached" "couchbase")
+declare -a arr_port
+arr_port=("php_fpm" "mongodb" "node" "mysqld" "redis" "nginx" "merger" "haproxy" "kafka" "memcached" "couchbase")
 
 # Function Random port
 function random_service_port() {
@@ -304,7 +304,7 @@ ADDTEXT
            fi
         done
     fi
- 
+ fi
  sudo chown -R prometheus:prometheus /etc/rc.d/init.d/*_exporter
  sudo chmod 755 /etc/rc.d/init.d/*_exporter
  sudo service ${expter}_exporter start

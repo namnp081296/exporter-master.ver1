@@ -3,11 +3,11 @@
 # Create prometheus folder in /etc/
 sudo mkdir /etc/prometheus
 
-# Set HOMEPATH
-HOME_PATH=/etc/prometheus
+# Move prometheus-exporter to /etc/prometheus/ path
+sudo mv ~/exporter /etc/prometheus/exporter-master
 
-# Move prometheus-exporter to /etc/prometheus/ path if folder is in ~/
-sudo mv ~/exporter $HOME_PATH/exporter-master
+# Set HOMEPATH
+HOME_PATH=/etc/prometheus/exporter-master
 
 # Create folder log and run for user:prometheus
 # sudo mkdir -p /var/log/prometheus/

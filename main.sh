@@ -20,7 +20,7 @@ sudo chown -R prometheus:prometheus /var/run/prometheus
 
 # Before we start running exporter. We should check existing port in server
 newport=0
-# Create Array list with key: name of service and value: port of service
+# Create Array list with key: name of service and value
 declare -a arr_port
 arr_port=("php_fpm" "mongodb" "node" "mysqld" "redis" "nginx" "merger" "haproxy" "kafka" "memcached" "couchbase")
 

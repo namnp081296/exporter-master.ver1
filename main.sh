@@ -1,6 +1,10 @@
 #!/bin/bash
 
-HOME_PATH=/etc/prometheus/
+# Create prometheus folder in /etc/
+sudo mkdir /etc/prometheus
+
+# Set HOMEPATH
+HOME_PATH=/etc/prometheus
 
 # Move prometheus-exporter to /etc/prometheus/ path if folder is in ~/
 sudo mv ~/exporter $HOME_PATH/exporter-master

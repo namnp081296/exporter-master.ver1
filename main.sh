@@ -264,61 +264,6 @@ EOF"
 ADDTEXT
         
              break;
-           else
-             newport_rand=$(( newport + rd ))
-             sudo bash -c "cat << 'EOF' > /etc/rc.d/init.d/exporter_${expter}
-#!/bin/bash
-
-# Source function library.
-. /etc/rc.d/init.d/functions
-
-PROGNAME=${PROGNAME}
-PROG=${PROG}
-USER=${USER}
-LOGFILE=${LOGFILE}
-PIDFILE=${PIDFILE}
-
-start() {
-    echo -n "\"" Starting ${PROGNAME} "\"": 
-    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${HOME_PATH}/yaml_handler/parse_yml.sh ${expter}`$newport_rand &>${LOGFILE} &"\""
-    RETVAL=${RETVAL}
-    echo
-    [ ${RETVAL} -eq 0 ] && sudo touch ${LOCKFILE}
-    echo
-}
-
-stop() {
-    echo -n "\"" Shutting down ${PROGNAME}: "\""
-    killproc ${PROGNAME}
-    rm -f ${LOCKFILE}
-    echo
-}
-
-case "\""\$1"\"" in
-    start)
-    start
-    ;;
-    stop)
-    stop
-    ;;
-    status)
-    status ${PROGNAME}
-    ;;
-    restart)
-    stop
-    start
-    ;;
-    *)
-        echo  "\""Usage: service exporter_${expter} {start|stop|status|reload|restart} "\""
-        exit 1
-    ;;
-esac
-EOF"
-
-             cat << ADDTEXT | sudo tee -a /etc/merger.yaml
-#${expter}
-- url: http://localhost:$newport_rand/metrics
-ADDTEXT
            fi
         done
     fi
@@ -426,29 +371,6 @@ ADDTEXT
 
              #echo "Port $newport is validable"
              break;
-           else
-             newport_rand=$(( newport + rd ))
-             #echo "Your new port is $newport_rand"
-             sudo bash -c "cat << 'EOF' >  /etc/systemd/system/exporter_${expter}.service
-[Unit]
-Description= exporter ${expter}
-Wants=network-online.target
-After=network-online.target
-
-[Service]
-User=prometheus
-Group=prometheus
-Type=simple
-ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $HOME_PATH/yaml_handler/parse_yml.sh ${expter}`$newport_rand
-
-[Install]
-WantedBy=multi-user.target
-EOF"
-
-             cat << ADDTEXT | sudo tee -a /etc/merger.yaml
-#${expter}
-- url: http://localhost:$newport_rand/metrics
-ADDTEXT
            fi
         done
       fi

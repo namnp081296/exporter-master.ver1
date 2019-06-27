@@ -1,16 +1,9 @@
 #!/bin/bash
 
-# Create folder to save all service backup file
-# mkdir service_backup
-CUR_DIR=`pwd`
+HOME_PATH=/etc/prometheus/
 
-# Copy all binary file from current folder to /usr/local/bin 
-sudo cp $CUR_DIR/bin/* /usr/local/bin
-
-# Create user with no create home and set owner to run exporter
-sudo useradd --no-create-home --shell /bin/false prometheus
-sudo chown -R prometheus:prometheus /usr/local/bin/exporter_*
-sudo chmod +x /usr/local/bin/exporter_*
+# Move prometheus-exporter to /etc/prometheus/ path
+sudo mv prometheus-exporter $HOME_PATH
 
 # Create folder log and run for user:prometheus
 sudo mkdir -p /var/log/prometheus/
@@ -23,6 +16,37 @@ newport=0
 # Create Array list with key: name of service and value
 declare -a arr_port
 arr_port=("php_fpm" "mongodb" "node" "mysqld" "redis" "nginx" "merger" "haproxy" "kafka" "memcached" "couchbase")
+
+# Function check user exist
+function check_user_exist() {
+    
+    getent passwd prometheus > /dev/null 2&>1
+
+    if [ $? -eq 0 ]; then
+       echo "User exists"
+    else
+       echo "Can create user."
+       sudo useradd --no-create-home --shell /bin/false prometheus
+    fi
+
+}
+
+# Function check file exist then copy to /usr/local/bin
+function check_file_exist() {
+  for expter in "${arr_port[@]}"
+    do
+      FILE=/usr/local/bin/exporter_${expter}
+      if [[ -f "$FILE" ]]
+      then
+        echo "file exporter_${expter} exist"
+      else
+        #echo "file exporter_${expter} not exist"
+        sudo cp $HOME_PATH/bin/* /usr/local/bin/
+        sudo chown -R prometheus:prometheus /usr/local/bin/exporter_*
+        sudo chmod +x /usr/local/bin/exporter_*
+      fi
+done   
+}
 
 # Function Random port
 function random_service_port() {
@@ -74,7 +98,7 @@ PIDFILE=${PIDFILE}
 
 start() {
     echo -n "\"" Starting ${PROGNAME} "\"":
-    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${CUR_DIR}/yaml_handler/parse_yml.sh ${expter}`$merger_port &>${LOGFILE} &"\""
+    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${HOME_PATH}/yaml_handler/parse_yml.sh ${expter}`$merger_port &>${LOGFILE} &"\""
     RETVAL=${RETVAL}
     echo
     [ ${RETVAL} -eq 0 ] && sudo touch ${LOCKFILE}
@@ -133,7 +157,7 @@ PIDFILE=${PIDFILE}
 
 start() {
     echo -n "\"" Starting ${PROGNAME} "\"": 
-    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${CUR_DIR}/yaml_handler/parse_yml.sh ${expter}`$service_port &>${LOGFILE} &"\""
+    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${HOME_PATH}/yaml_handler/parse_yml.sh ${expter}`$service_port &>${LOGFILE} &"\""
     RETVAL=${RETVAL}
     echo
     [ ${RETVAL} -eq 0 ] && sudo touch ${LOCKFILE}
@@ -196,7 +220,7 @@ PIDFILE=${PIDFILE}
 
 start() {
     echo -n "\"" Starting ${PROGNAME} "\"": 
-    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${CUR_DIR}/yaml_handler/parse_yml.sh ${expter}`$newport &>${LOGFILE} &"\""
+    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${HOME_PATH}/yaml_handler/parse_yml.sh ${expter}`$newport &>${LOGFILE} &"\""
     RETVAL=${RETVAL}
     echo
     [ ${RETVAL} -eq 0 ] && sudo touch ${LOCKFILE}
@@ -252,7 +276,7 @@ PIDFILE=${PIDFILE}
 
 start() {
     echo -n "\"" Starting ${PROGNAME} "\"": 
-    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${CUR_DIR}/yaml_handler/parse_yml.sh ${expter}`$newport_rand &>${LOGFILE} &"\""
+    daemon --user ${USER} --pidfile="\""${PIDFILE}"\"" "\""${PROG} `/bin/bash ${HOME_PATH}/yaml_handler/parse_yml.sh ${expter}`$newport_rand &>${LOGFILE} &"\""
     RETVAL=${RETVAL}
     echo
     [ ${RETVAL} -eq 0 ] && sudo touch ${LOCKFILE}
@@ -327,7 +351,7 @@ After=network-online.target
 User=prometheus
 Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$merger_port
+ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $HOME_PATH/yaml_handler/parse_yml.sh ${expter}`$merger_port
 
 [Install]
 WantedBy=multi-user.target
@@ -353,7 +377,7 @@ After=network-online.target
 User=prometheus
 Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$service_port
+ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $HOME_PATH/yaml_handler/parse_yml.sh ${expter}`$service_port
 
 [Install]
 WantedBy=multi-user.target
@@ -385,7 +409,7 @@ After=network-online.target
 User=prometheus
 Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport
+ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $HOME_PATH/yaml_handler/parse_yml.sh ${expter}`$newport
 
 [Install]
 WantedBy=multi-user.target
@@ -411,7 +435,7 @@ After=network-online.target
 User=prometheus
 Group=prometheus
 Type=simple
-ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $CUR_DIR/yaml_handler/parse_yml.sh ${expter}`$newport_rand
+ExecStart=/usr/local/bin/exporter_${expter} `/bin/bash $HOME_PATH/yaml_handler/parse_yml.sh ${expter}`$newport_rand
 
 [Install]
 WantedBy=multi-user.target
@@ -436,6 +460,10 @@ done
 
 ## MAIN FUNCTION ###
 function main() {
+    
+    check_user_exist
+    check_file_exist
+    
     ver=$(get_version_centos)
     if [[ $ver == 7 ]] ; then 
        centos_seven

@@ -2,8 +2,8 @@
 
 HOME_PATH=/etc/prometheus/
 
-# Move prometheus-exporter to /etc/prometheus/ path
-sudo mv prometheus-exporter $HOME_PATH
+# Move prometheus-exporter to /etc/prometheus/ path if folder is in ~/
+sudo mv ~/exporter $HOME_PATH/exporter-master
 
 # Create folder log and run for user:prometheus
 sudo mkdir -p /var/log/prometheus/
@@ -34,19 +34,19 @@ function check_user_exist() {
 # Function check file exist then copy to /usr/local/bin
 function check_file_exist() {
   for expter in "${arr_port[@]}"
-    do
-      FILE=/usr/local/bin/exporter_${expter}
-      if [[ -f "$FILE" ]]
-      then
-        echo "file exporter_${expter} exist"
-      else
+  do
+    FILE=/usr/local/bin/exporter_${expter}
+    if [[ ! -e "$FILE" ]]
+    then       
         #echo "file exporter_${expter} not exist"
-        sudo cp $HOME_PATH/bin/* /usr/local/bin/
-        sudo chown -R prometheus:prometheus /usr/local/bin/exporter_*
-        sudo chmod +x /usr/local/bin/exporter_*
-      fi
-done   
-}
+        sudo cp $HOME_PATH/bin/exporter_${expter} /usr/local/bin/
+        sudo chown -R prometheus:prometheus /usr/local/bin/exporter_${expter}
+        sudo chmod +x /usr/local/bin/exporter_${expter}
+    else
+        echo "file exporter_${expter} exist"
+    fi
+  done   
+  }
 
 # Function Random port
 function random_service_port() {

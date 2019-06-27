@@ -5,8 +5,8 @@
 # /bin/bash parse_yml.sh -> list all parameters
 # /bin/bash parse_yml.sh "mongo" -> list "mongo" parameter
 
-CUR_DIR=`pwd`
-FILE="$CUR_DIR/yaml_handler/exporter.yml"
+HOME_PATH=/etc/prometheus/exporter-master
+FILE="$HOME_PATH/yaml_handler/exporter.yml"
 
 if [[ -z $1 ]]; then
 	while read -r line

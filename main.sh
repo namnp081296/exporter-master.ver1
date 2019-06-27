@@ -10,10 +10,10 @@ HOME_PATH=/etc/prometheus
 sudo mv ~/exporter $HOME_PATH/exporter-master
 
 # Create folder log and run for user:prometheus
-sudo mkdir -p /var/log/prometheus/
-sudo mkdir -p /var/run/prometheus/
-sudo chown -R prometheus:prometheus /var/log/prometheus
-sudo chown -R prometheus:prometheus /var/run/prometheus
+# sudo mkdir -p /var/log/prometheus/
+# sudo mkdir -p /var/run/prometheus/
+# sudo chown -R prometheus:prometheus /var/log/prometheus
+# sudo chown -R prometheus:prometheus /var/run/prometheus
 
 # Before we start running exporter. We should check existing port in server
 newport=0
@@ -466,6 +466,12 @@ done
 function main() {
     
     check_user_exist
+    
+    sudo mkdir -p /var/log/prometheus/
+    sudo mkdir -p /var/run/prometheus/
+    sudo chown -R prometheus:prometheus /var/log/prometheus
+    sudo chown -R prometheus:prometheus /var/run/prometheus
+
     check_file_exist
     
     ver=$(get_version_centos)

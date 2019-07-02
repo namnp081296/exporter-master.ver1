@@ -310,13 +310,14 @@ ADDTEXT
  sudo chmod 755 /etc/rc.d/init.d/$SERVICE
 
  pidof -x $SERVICE > /dev/null
- if [[ $? == 1 ]] ; then
-      #echo "$SERVICE is not running"
+ # Only exporter_node and exporter_merger run in this script
+ if [[ $? == 1 && $SERVICE == "exporter_merger" && $SERVICE == "exporter_node" ]] ; then
+      #
       sudo service $SERVICE start
       sudo service $SERVICE status
  else
       #echo "$SERVICE running"
-      sudo service $SERVICE restart
+      sudo service $SERVICE stop
       sudo service $SERVICE status
  fi
 
@@ -439,14 +440,14 @@ ADDTEXT
 SERVICE="exporter_${expter}.service"
 sudo systemctl daemon-reload
 pidof -x $SERVICE > /dev/null
- if [[ $? == 1 ]] ; then
-      #echo "$SERVICE is not running"
+ if [[ $? == 1 && $SERVICE == "exporter_merger.service" && $SERVICE == "exporter_node.service" ]] ; then
+      # If $=1 then run only exporter_node and exporter_merger
       sudo systemctl start $SERVICE
       sudo systemctl enable $SERVICE
       sudo systemctl status $SERVICE
  else
-      #echo "$SERVICE running"
-      sudo systemctl restart $SERVICE
+      # If exporter is not merger and node then stop
+      sudo systemctl stop $SERVICE
       sudo systemctl status $SERVICE
 done
 
